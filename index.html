@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Twitch Chat</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    #chat-container {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: 360px;
+      max-height: 75vh;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      padding: 10px;
+    }
+    .message-bubble {
+      background: linear-gradient(90deg, rgba(50,150,255,0.2), rgba(100,200,255,0.3));
+      backdrop-filter: blur(4px);
+      border-radius: 16px;
+      padding: 10px 16px;
+      animation: fadeIn 0.5s ease-out;
+      word-wrap: break-word;
+    }
+    .username {
+      font-weight: bold;
+      margin-right: 6px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    }
+    .message-bubble.fade-out {
+      animation: fadeOut 0.5s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-container"></div>
+
+  <!-- Подключаем tmi.js -->
+  <script src="https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/dist/tmi.min.js"></script>
+  <script>
+    const chatContainer = document.getElementById('chat-container');
+    const CHANNEL = 'gilliksss';
+
+    const client = new tmi.Client({
+      connection: { secure: true, reconnect: true },
+      channels: [CHANNEL]
+    });
+
+    client.connect();
+
+    client.on('message', (channel, tags, message, self) => {
+      if (self) return;
+
+      const div = document.createElement('div');
+      div.className = 'message-bubble';
+      const color = tags.color || '#ffffff';
+      const name = tags['display-name'] || tags.username;
+      div.innerHTML = `<span class="username" style="color:${color}">${name}:</span> ${message}`;
+      
+      chatContainer.appendChild(div);
+      if (chatContainer.children.length > 12) chatContainer.removeChild(chatContainer.lastChild);
+
+      setTimeout(() => {
+        div.classList.add('fade-out');
+        setTimeout(() => div.remove(), 500);
+      }, 13000);
+    });
+  </script>
+</body>
+</html>
